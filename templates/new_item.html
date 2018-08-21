@@ -49,20 +49,23 @@
 
     <div class="container">
         <div class="text-center">
-            <form action="{{ url_for('new_item') }}" method="POST">
-                <label>Name:</label>
-                <input type="text" size="30" name="name" required>
-                <br>
-                <label>Description:</label>
-                <textarea name="description" required></textarea>
-                <br>
-                <select name="category_id">
-                    {% for category in categories %}
-                    <option value="{{category.id}}">{{category.name}}</option>
-                    {% endfor %}
-                </select>
-                <input type="submit">
-            </form>
+            <h2 class="my-5">Add a new Item</h2>
+            <div class="w-50 mx-auto">
+                <form action="{{ url_for('new_item') }}" method="POST">
+                    <label for="name">Enter Item Name</label>
+                    <input type="text" class="form-control" id="name" placeholder="Enter Item Name" size="30" name="name" required>
+                    <label class="mt-3" for="description">Description</label>
+                    <textarea class="form-control" id="description" placeholder="Enter item description here" name="description" required></textarea>
+                    <label class="mt-3" for="category">Category</label>
+                    <select class="custom-select" id="catgory" name="category_id" required>
+                        <option value="" disabled selected>Select a Category</option>
+                        {% for category in categories %}
+                        <option value="{{category.id}}">{{category.name}}</option>
+                        {% endfor %}
+                    </select>
+                    <input class="btn btn-primary mt-2" type="submit">
+                </form>
+            </div>
         </div>
     </div>
 </body>
