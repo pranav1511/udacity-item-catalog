@@ -49,10 +49,15 @@
 
     <div class="container">
         <div class="text-center">
-            <h2>{{category.name}}</h2>
+            <h2 class="my-5">Category: {{category.name}}</h2>
+            <div>
+                <a class="btn btn-primary" href="{{ url_for('new_item') }}">Add Item</a>
+            </div>
             {% for item in items %}
-            <a href="#">{{item.name}}</a>
-            <br> {% endfor %}
+            <a class="d-inline-block text-left shadow mx-2 my-3 catalog-card card" href="{{ url_for('show_item', category_name=category.name, item_name=item.name) }}">
+                <div class="card-body">{{item.name}}</div>
+            </a>
+            {% endfor %}
         </div>
     </div>
 </body>
