@@ -47,7 +47,23 @@
 
     <div class="container">
         <div class="text-center">
-            <p>This page will edit item {{item_name}}</p>
+            <form action="{{ url_for('edit_item', item_name=item.name) }}" method="POST">
+                <label>Name:</label>
+                <input type="text" size="30" name="name" placeholder="{{item.name}}" value="{{item.name}}" required>
+                <br>
+                <label>Description:</label>
+                <textarea name="description" placeholder="{{item.description}}" required>{{item.description}}</textarea>
+                <br>
+                <select name="category_id">
+                    {% for category in categories %} {% if category.id == item.category_id %}
+                    <option value="{{category.id}}" selected>{{category.name}}</option>
+                    {% else %}
+                    <option value="{{category.id}}">{{category.name}}</option>
+                    {% endif %} {% endfor %}
+                </select>
+                <br>
+                <input type="submit">
+            </form>
         </div>
     </div>
 </body>

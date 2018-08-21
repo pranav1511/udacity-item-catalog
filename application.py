@@ -56,9 +56,25 @@ def show_item(category_name, item_name):
     return render_template('item.html', category_name=category_name, item=item)
 
 
-@app.route('/catalog/<string:item_name>/edit/')
+@app.route('/catalog/<string:item_name>/edit/', methods=['GET', 'POST'])
 def edit_item(item_name):
-    return render_template('edit_item.html', item_name=item_name)
+    item_to_edit = dbSession.query(Item).filter_by(name=item_name).one()
+    if request.method == 'POST':
+        count = dbSession.query(Item).filter_by(
+            name=request.form['name']).count()
+        if count > 0 and item_name != request.form['name']:
+            return redirect(url_for('edit_item', item_name=item_name))
+        item_to_edit.name = request.form['name']
+        item_to_edit.description = request.form['description']
+        item_to_edit.category_id = request.form['category_id']
+        dbSession.add(item_to_edit)
+        dbSession.commit()
+        category_name = dbSession.query(Category).filter_by(
+            id=request.form['category_id']).one().name
+        return redirect(url_for('show_item', category_name=category_name, item_name=request.form['name']))
+    else:
+        categories = dbSession.query(Category).all()
+        return render_template('edit_item.html', categories=categories, item=item_to_edit)
 
 
 @app.route('/catalog/<string:item_name>/delete/')
