@@ -52,7 +52,8 @@ def new_item():
 
 @app.route('/catalog/<string:category_name>/<string:item_name>/')
 def show_item(category_name, item_name):
-    return render_template('item.html', category_name=category_name, item_name=item_name)
+    item = dbSession.query(Item).filter_by(name=item_name).one()
+    return render_template('item.html', category_name=category_name, item=item)
 
 
 @app.route('/catalog/<string:item_name>/edit/')
