@@ -77,9 +77,17 @@ def edit_item(item_name):
         return render_template('edit_item.html', categories=categories, item=item_to_edit)
 
 
-@app.route('/catalog/<string:item_name>/delete/')
+@app.route('/catalog/<string:item_name>/delete/', methods=['GET', 'POST'])
 def delete_item(item_name):
-    return render_template('delete_item.html', item_name=item_name)
+    item_to_delete = dbSession.query(Item).filter_by(name=item_name).one()
+    if request.method == 'POST':
+        dbSession.delete(item_to_delete)
+        dbSession.commit()
+        category_name = dbSession.query(Category).filter_by(
+            id=item_to_delete.category_id).one().name
+        return redirect(url_for('show_items', category_name=category_name))
+    else:
+        return render_template('delete_item.html', item=item_to_delete)
 
 
 if __name__ == '__main__':
