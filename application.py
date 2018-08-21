@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -25,9 +25,25 @@ def show_items(category_name):
     return render_template('items.html', category_name=category_name)
 
 
-@app.route('/catalog/new/')
+@app.route('/catalog/new/', methods=['GET', 'POST'])
 def new_item():
-    return render_template('new_item.html')
+    if request.method == 'POST':
+        count = dbSession.query(Item).filter_by(
+            name=request.form['name']).count()
+        if count > 0:
+            return redirect(url_for('new_item'))
+        new_item = Item(
+            name=request.form['name'],
+            description=request.form['description'],
+            category_id=request.form['category_id'])
+        dbSession.add(new_item)
+        dbSession.commit()
+        category_name = dbSession.query(Category).filter_by(
+            id=request.form['category_id']).one().name
+        return redirect(url_for('show_item', category_name=category_name, item_name=request.form['name']))
+    else:
+        categories = dbSession.query(Category).all()
+        return render_template('new_item.html', categories=categories)
 
 
 @app.route('/catalog/<string:category_name>/<string:item_name>/')
