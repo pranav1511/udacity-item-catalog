@@ -22,7 +22,11 @@ def show_catalog():
 @app.route('/catalog/<string:category_name>/')
 @app.route('/catalog/<string:category_name>/items/')
 def show_items(category_name):
-    return render_template('items.html', category_name=category_name)
+    category = dbSession.query(Category).filter_by(
+        name=category_name).one()
+    items = dbSession.query(Item).filter_by(
+        category_id=category.id).all()
+    return render_template('items.html', category=category, items=items)
 
 
 @app.route('/catalog/new/', methods=['GET', 'POST'])
