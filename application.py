@@ -15,7 +15,8 @@ dbSession = DBSession()
 @app.route('/')
 @app.route('/catalog/')
 def show_catalog():
-    return render_template('catalog.html')
+    categories = dbSession.query(Category).all()
+    return render_template('catalog.html', categories=categories)
 
 
 @app.route('/catalog/<string:category_name>/')
