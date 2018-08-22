@@ -99,7 +99,7 @@ def show_login():
     state = '' . join(random.choice(string.ascii_uppercase +
                                     string.digits) for x in xrange(32))
     login_session['state'] = state
-    return "state = %s" % login_session['state']
+    return render_template('login.html', state=state)
 
 
 if __name__ == '__main__':
