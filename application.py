@@ -4,6 +4,10 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Category, Item
 
+from flask import session as login_session
+import random
+import string
+
 app = Flask(__name__)
 
 engine = create_engine('sqlite:///catalog.db')
@@ -90,6 +94,15 @@ def delete_item(item_name):
         return render_template('delete_item.html', item=item_to_delete)
 
 
+@app.route('/login/')
+def show_login():
+    state = '' . join(random.choice(string.ascii_uppercase +
+                                    string.digits) for x in xrange(32))
+    login_session['state'] = state
+    return "state = %s" % login_session['state']
+
+
 if __name__ == '__main__':
+    app.secret_key = 'perfect_secret_key'
     app.debug = True
     app.run(host='0.0.0.0', port=8080, threaded=False)
