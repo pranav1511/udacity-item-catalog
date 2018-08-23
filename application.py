@@ -239,7 +239,7 @@ def fbconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
     access_token = request.data
-    print ("access token received %s " % access_token)
+    print("access token received %s " % access_token)
 
     app_id = FACEBOOK_APP_ID
     app_secret = json.loads(
@@ -263,7 +263,7 @@ def fbconnect():
     url = 'https://graph.facebook.com/v3.1/me?access_token=%s&fields=name,id,email' % token
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
-    
+
     data = json.loads(result)
     login_session['provider'] = 'facebook'
     login_session['username'] = data["name"]
@@ -295,6 +295,17 @@ def fbconnect():
     response.headers['Content-Type'] = 'application/json'
     print('done')
     return response
+
+@app.route('/fbdisconnect')
+def fbdisconnect():
+    facebook_id = login_session['facebook_id']
+    # The access token must me included to successfully logout
+    access_token = login_session['access_token']
+    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (
+        facebook_id, access_token)
+    h = httplib2.Http()
+    result = h.request(url, 'DELETE')[1]
+    return "you have been logged out"
 
 
 if __name__ == '__main__':
