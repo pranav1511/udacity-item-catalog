@@ -55,10 +55,14 @@
         <div class="text-center">
             <h2 class="my-5">Login</h2>
             <div id="signinButton">
-                <span class="g-signin" data-scope="openid email" data-clientid="{{ GOOGLE_CLIENT_ID }}"
-                    data-redirecturi="postmessage" data-accesstype="offline" data-cookiepolicy="single_host_origin" data-callback="googleSignInCallback"
-                    data-approvalprompt="force">
+                <span class="g-signin" data-scope="openid email" data-clientid="{{ GOOGLE_CLIENT_ID }}" data-redirecturi="postmessage" data-accesstype="offline"
+                    data-cookiepolicy="single_host_origin" data-callback="googleSignInCallback" data-approvalprompt="force">
                 </span>
+
+                <fb:login-button scope="public_profile,email" onlogin="sendTokenToServer();">
+                    <a href='javascript:sendTokenToServer()'>Login with Facebook</a>
+                </fb:login-button>
+
             </div>
             <div id="result" style="display: none;">
                 <h5>You will be redirected automatically or you can click <a href="{{ url_for('show_catalog') }}">here</a>.</h5>
@@ -107,6 +111,56 @@
                     }
                 });
             }
+        }
+    </script>
+
+    <script>
+        window.fbAsyncInit = function () {
+            FB.init({
+                appId: '{{ FACEBOOK_APP_ID }}',
+                xfbml: true,
+                version: 'v3.1'
+            });
+            FB.AppEvents.logPageView();
+        };
+
+        (function (d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) { return; }
+            js = d.createElement(s); js.id = id;
+            js.src = "https://connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+
+        // Here we run a very simple test of the Graph API after login is
+        // successful.  See statusChangeCallback() for when this call is made.
+        function sendTokenToServer() {
+            var access_token = FB.getAuthResponse()['accessToken'];
+            console.log(access_token)
+            console.log('Welcome!  Fetching your information.... ');
+            FB.api('/me', function (response) {
+                console.log('Successful login for: ' + response.name);
+                $.ajax({
+                    type: 'POST',
+                    url: '/fbconnect?state={{state}}',
+                    processData: false,
+                    data: access_token,
+                    contentType: 'application/octet-stream; charset=utf-8',
+                    success: function (result) {
+                        // Handle or verify the server response if necessary.
+                        if (result) {
+                            $('#result').html('Login Successful!</br>' + result + '</br>Redirecting...')
+                            setTimeout(function () {
+                                window.location.href = "/restaurant";
+                            }, 4000);
+
+                        } else {
+                            $('#result').html('Failed to make a server-side call. Check your configuration and console.');
+                        }
+                    }
+
+                });
+            });
         }
     </script>
 </body>

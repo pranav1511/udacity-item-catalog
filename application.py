@@ -20,6 +20,9 @@ app = Flask(__name__)
 GOOGLE_CLIENT_ID = json.loads(
     open('google_client_secrets.json', 'r').read())['web']['client_id']
 
+FACEBOOK_APP_ID = json.loads(
+    open('facebook_client_secrets.json', 'r').read())['web']['app_id']
+
 engine = create_engine('sqlite:///catalog.db')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
@@ -109,7 +112,7 @@ def show_login():
     state = '' . join(random.choice(string.ascii_uppercase +
                                     string.digits) for x in xrange(32))
     login_session['state'] = state
-    return render_template('login.html', state=state, GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID)
+    return render_template('login.html', state=state, GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID, FACEBOOK_APP_ID=FACEBOOK_APP_ID)
 
 
 @app.route('/gconnect', methods=['POST'])
@@ -124,7 +127,8 @@ def gconnect():
 
     try:
         # Upgrade the authorization code into a credentials object
-        oauth_flow = flow_from_clientsecrets('google_client_secrets.json', scope='')
+        oauth_flow = flow_from_clientsecrets(
+            'google_client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
