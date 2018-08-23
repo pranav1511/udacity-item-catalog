@@ -48,6 +48,8 @@ def show_items(category_name):
 
 @app.route('/catalog/new/', methods=['GET', 'POST'])
 def new_item():
+    if 'username' not in login_session:
+        return redirect(url_for('show_login'))
     if request.method == 'POST':
         count = dbSession.query(Item).filter_by(
             name=request.form['name']).count()
@@ -75,6 +77,8 @@ def show_item(category_name, item_name):
 
 @app.route('/catalog/<string:item_name>/edit/', methods=['GET', 'POST'])
 def edit_item(item_name):
+    if 'username' not in login_session:
+        return redirect(url_for('show_login'))
     item_to_edit = dbSession.query(Item).filter_by(name=item_name).one()
     if request.method == 'POST':
         count = dbSession.query(Item).filter_by(
@@ -96,6 +100,8 @@ def edit_item(item_name):
 
 @app.route('/catalog/<string:item_name>/delete/', methods=['GET', 'POST'])
 def delete_item(item_name):
+    if 'username' not in login_session:
+        return redirect(url_for('show_login'))
     item_to_delete = dbSession.query(Item).filter_by(name=item_name).one()
     if request.method == 'POST':
         dbSession.delete(item_to_delete)
