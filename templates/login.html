@@ -55,8 +55,8 @@
         <div class="text-center">
             <h2 class="my-5">Login</h2>
             <div id="signinButton">
-                <span class="g-signin" data-scope="openid email" data-clientid="764564590346-nlrl72hagv1n7pqu2a3ihkrskchpignm.apps.googleusercontent.com"
-                    data-redirecturi="postmessage" data-accesstype="offline" data-cookiepolicy="single_host_origin" data-callback="signInCallback"
+                <span class="g-signin" data-scope="openid email" data-clientid="{{ GOOGLE_CLIENT_ID }}"
+                    data-redirecturi="postmessage" data-accesstype="offline" data-cookiepolicy="single_host_origin" data-callback="googleSignInCallback"
                     data-approvalprompt="force">
                 </span>
             </div>
@@ -74,7 +74,7 @@
     </div>
 
     <script>
-        function signInCallback(authResult) {
+        function googleSignInCallback(authResult) {
             if (authResult['code']) {
                 $('#signinButton').hide();
                 $.ajax({

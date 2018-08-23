@@ -17,8 +17,8 @@ import requests
 
 app = Flask(__name__)
 
-CLIENT_ID = json.loads(
-    open('client_secrets.json', 'r').read())['web']['client_id']
+GOOGLE_CLIENT_ID = json.loads(
+    open('google_client_secrets.json', 'r').read())['web']['client_id']
 
 engine = create_engine('sqlite:///catalog.db')
 Base.metadata.bind = engine
@@ -109,7 +109,7 @@ def show_login():
     state = '' . join(random.choice(string.ascii_uppercase +
                                     string.digits) for x in xrange(32))
     login_session['state'] = state
-    return render_template('login.html', state=state)
+    return render_template('login.html', state=state, GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID)
 
 
 @app.route('/gconnect', methods=['POST'])
@@ -124,7 +124,7 @@ def gconnect():
 
     try:
         # Upgrade the authorization code into a credentials object
-        oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
+        oauth_flow = flow_from_clientsecrets('google_client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
@@ -154,7 +154,7 @@ def gconnect():
         return response
 
     # Verify that the access token is valid for this app.
-    if result['issued_to'] != CLIENT_ID:
+    if result['issued_to'] != GOOGLE_CLIENT_ID:
         response = make_response(
             json.dumps("Token's client ID does not match app's."), 401)
         print("Token's client ID does not match app's.")
