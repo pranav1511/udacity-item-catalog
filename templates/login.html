@@ -135,6 +135,7 @@
         // Here we run a very simple test of the Graph API after login is
         // successful.  See statusChangeCallback() for when this call is made.
         function sendTokenToServer() {
+            $('#signinButton').hide();
             var access_token = FB.getAuthResponse()['accessToken'];
             console.log(access_token)
             console.log('Welcome!  Fetching your information.... ');
@@ -149,12 +150,20 @@
                     success: function (result) {
                         // Handle or verify the server response if necessary.
                         if (result) {
-                            $('#result').html('Login Successful!</br>' + result + '</br>Redirecting...')
+                            if (typeof (result) == 'string') {
+                                $('#user-details').hide();
+                                $('#message').html(result);
+                            }
+                            else {
+                                $('#image').attr('src', result.picture);
+                                $('#name').append(result.username);
+                            }
+                            $('#result').show();
                             setTimeout(function () {
-                                window.location.href = "/restaurant";
+                                window.location.href = "{{ url_for('show_catalog') }}"
                             }, 4000);
-
-                        } else {
+                        } 
+                        else {
                             $('#result').html('Failed to make a server-side call. Check your configuration and console.');
                         }
                     }
