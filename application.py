@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Category, Item
+from database_setup import Base, Category, Item, User
 
 from flask import session as login_session
 import random
@@ -58,7 +58,8 @@ def new_item():
         new_item = Item(
             name=request.form['name'],
             description=request.form['description'],
-            category_id=request.form['category_id'])
+            category_id=request.form['category_id'],
+            user_id=login_session['user_id'])
         dbSession.add(new_item)
         dbSession.commit()
         category_name = dbSession.query(Category).filter_by(
@@ -195,6 +196,12 @@ def gconnect():
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
+    # see if user exists
+    user_id = get_user_id(login_session['email'])
+    if not user_id:
+        user_id = create_user(login_session)
+    login_session['user_id'] = user_id
+
     response_json = {}
     response_json['username'] = login_session['username']
     response_json['picture'] = login_session['picture']
@@ -283,10 +290,10 @@ def fbconnect():
     login_session['picture'] = data["data"]["url"]
 
     # see if user exists
-    # user_id = getUserID(login_session['email'])
-    # if not user_id:
-    #     user_id = createUser(login_session)
-    # login_session['user_id'] = user_id
+    user_id = get_user_id(login_session['email'])
+    if not user_id:
+        user_id = create_user(login_session)
+    login_session['user_id'] = user_id
 
     response_json = {}
     response_json['username'] = login_session['username']
@@ -328,6 +335,28 @@ def disconnect():
         return redirect(url_for('show_catalog'))
     else:
         return redirect(url_for('show_catalog'))
+
+
+def create_user(login_session):
+    new_user = User(name=login_session['username'], email=login_session[
+        'email'], picture=login_session['picture'])
+    dbSession.add(new_user)
+    dbSession.commit()
+    user = dbSession.query(User).filter_by(email=login_session['email']).one()
+    return user.id
+
+
+def get_user_info(user_id):
+    user = dbSession.query(User).filter_by(id=user_id).one()
+    return user
+
+
+def get_user_id(email):
+    try:
+        user = dbSession.query(User).filter_by(email=email).one()
+        return user.id
+    except:
+        return None
 
 
 if __name__ == '__main__':
