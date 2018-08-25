@@ -43,12 +43,15 @@ def show_items(category_name):
         name=category_name).one()
     items = dbSession.query(Item).filter_by(
         category_id=category.id).all()
-    return render_template('items.html', category=category, items=items)
+    if 'user_id' not in login_session:
+        return render_template('public_items.html', category=category, items=items)
+    else:
+        return render_template('items.html', category=category, items=items)
 
 
 @app.route('/catalog/new/', methods=['GET', 'POST'])
 def new_item():
-    if 'username' not in login_session:
+    if 'user_id' not in login_session:
         return redirect(url_for('show_login'))
     if request.method == 'POST':
         count = dbSession.query(Item).filter_by(
@@ -73,14 +76,21 @@ def new_item():
 @app.route('/catalog/<string:category_name>/<string:item_name>/')
 def show_item(category_name, item_name):
     item = dbSession.query(Item).filter_by(name=item_name).one()
-    return render_template('item.html', category_name=category_name, item=item)
+    creator = get_user_info(item.user_id)
+    if 'user_id' not in login_session or creator.id != login_session['user_id']:
+        return render_template('public_item.html', category_name=category_name, item=item)
+    else:
+        return render_template('item.html', category_name=category_name, item=item)
 
 
 @app.route('/catalog/<string:item_name>/edit/', methods=['GET', 'POST'])
 def edit_item(item_name):
-    if 'username' not in login_session:
+    if 'user_id' not in login_session:
         return redirect(url_for('show_login'))
     item_to_edit = dbSession.query(Item).filter_by(name=item_name).one()
+    creator = get_user_info(item_to_edit.user_id)
+    if creator.id != login_session['user_id']:
+        return redirect(url_for('show_login'))
     if request.method == 'POST':
         count = dbSession.query(Item).filter_by(
             name=request.form['name']).count()
@@ -101,9 +111,12 @@ def edit_item(item_name):
 
 @app.route('/catalog/<string:item_name>/delete/', methods=['GET', 'POST'])
 def delete_item(item_name):
-    if 'username' not in login_session:
+    if 'user_id' not in login_session:
         return redirect(url_for('show_login'))
     item_to_delete = dbSession.query(Item).filter_by(name=item_name).one()
+    creator = get_user_info(item_to_delete.user_id)
+    if creator.id != login_session['user_id']:
+        return redirect(url_for('show_login'))
     if request.method == 'POST':
         dbSession.delete(item_to_delete)
         dbSession.commit()
@@ -330,7 +343,7 @@ def disconnect():
         del login_session['username']
         del login_session['email']
         del login_session['picture']
-        #del login_session['user_id']
+        del login_session['user_id']
         del login_session['provider']
         return redirect(url_for('show_catalog'))
     else:
