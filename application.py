@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -52,11 +52,13 @@ def show_items(category_name):
 @app.route('/catalog/new/', methods=['GET', 'POST'])
 def new_item():
     if 'user_id' not in login_session:
+        flash('You need to login first!', 'warning')
         return redirect(url_for('show_login'))
     if request.method == 'POST':
         count = dbSession.query(Item).filter_by(
             name=request.form['name']).count()
         if count > 0:
+            flash('The item already exists!', 'warning')
             return redirect(url_for('new_item'))
         new_item = Item(
             name=request.form['name'],
@@ -67,6 +69,8 @@ def new_item():
         dbSession.commit()
         category_name = dbSession.query(Category).filter_by(
             id=request.form['category_id']).one().name
+        flash(new_item.name + ' has been added to the category ' +
+              category_name + ' successfully!', 'success')
         return redirect(url_for('show_item', category_name=category_name, item_name=request.form['name']))
     else:
         categories = dbSession.query(Category).all()
@@ -86,15 +90,18 @@ def show_item(category_name, item_name):
 @app.route('/catalog/<string:item_name>/edit/', methods=['GET', 'POST'])
 def edit_item(item_name):
     if 'user_id' not in login_session:
+        flash('You need to login first!', 'warning')
         return redirect(url_for('show_login'))
     item_to_edit = dbSession.query(Item).filter_by(name=item_name).one()
     creator = get_user_info(item_to_edit.user_id)
     if creator.id != login_session['user_id']:
-        return redirect(url_for('show_login'))
+        flash('You cannot edit this item!', 'warning')
+        return redirect(url_for('show_catalog'))
     if request.method == 'POST':
         count = dbSession.query(Item).filter_by(
             name=request.form['name']).count()
         if count > 0 and item_name != request.form['name']:
+            flash('The item already exists!', 'warning')
             return redirect(url_for('edit_item', item_name=item_name))
         item_to_edit.name = request.form['name']
         item_to_edit.description = request.form['description']
@@ -103,6 +110,7 @@ def edit_item(item_name):
         dbSession.commit()
         category_name = dbSession.query(Category).filter_by(
             id=request.form['category_id']).one().name
+        flash(item_to_edit.name + ' has been updated successfully!', 'success')
         return redirect(url_for('show_item', category_name=category_name, item_name=request.form['name']))
     else:
         categories = dbSession.query(Category).all()
@@ -112,16 +120,19 @@ def edit_item(item_name):
 @app.route('/catalog/<string:item_name>/delete/', methods=['GET', 'POST'])
 def delete_item(item_name):
     if 'user_id' not in login_session:
+        flash('You need to login first!', 'warning')
         return redirect(url_for('show_login'))
     item_to_delete = dbSession.query(Item).filter_by(name=item_name).one()
     creator = get_user_info(item_to_delete.user_id)
     if creator.id != login_session['user_id']:
-        return redirect(url_for('show_login'))
+        flash('You cannot delete this item!', 'warning')
+        return redirect(url_for('show_catalog'))
     if request.method == 'POST':
         dbSession.delete(item_to_delete)
         dbSession.commit()
         category_name = dbSession.query(Category).filter_by(
             id=item_to_delete.category_id).one().name
+        flash(item_to_delete.name + ' has been deleted successfully!', 'success')
         return redirect(url_for('show_items', category_name=category_name))
     else:
         return render_template('delete_item.html', item=item_to_delete)
@@ -222,6 +233,7 @@ def gconnect():
     response = make_response(json.dumps(response_json), 200)
     response.headers['Content-Type'] = 'application/json'
     print('done')
+    flash('You have successfully been logged in!', 'success')
     return response
 
 
@@ -315,6 +327,7 @@ def fbconnect():
     response = make_response(json.dumps(response_json), 200)
     response.headers['Content-Type'] = 'application/json'
     print('done')
+    flash('You have successfully been logged in!', 'success')
     return response
 
 
@@ -345,8 +358,10 @@ def disconnect():
         del login_session['picture']
         del login_session['user_id']
         del login_session['provider']
+        flash('You have successfully been logged out!', 'success')
         return redirect(url_for('show_catalog'))
     else:
+        flash('You were not logged in to begin with!', 'warning')
         return redirect(url_for('show_catalog'))
 
 

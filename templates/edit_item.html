@@ -49,6 +49,16 @@
 
     <div class="container">
         <div class="text-center">
+            <div class="mt-2">
+                {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show text-left" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                {% endfor %} {% endif %} {% endwith %}
+            </div>
             <h2 class="my-5">Edit Item: {{item.name}}</h2>
             <div class="w-50 mx-auto">
                 <form action="{{ url_for('edit_item', item_name=item.name) }}" method="POST">
@@ -60,8 +70,7 @@
                     <label class="mt-3" for="category">Category</label>
                     <select class="custom-select" id="catgory" name="category_id" required>
                         <option value="" disabled selected>Select a Category</option>
-                        {% for category in categories %} 
-                        {% if category.id == item.category_id %}
+                        {% for category in categories %} {% if category.id == item.category_id %}
                         <option value="{{category.id}}" selected>{{category.name}}</option>
                         {% else %}
                         <option value="{{category.id}}">{{category.name}}</option>
