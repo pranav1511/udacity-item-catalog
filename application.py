@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm.exc import NoResultFound
 from database_setup import Base, Category, Item, User
 
 from flask import session as login_session
@@ -27,6 +28,30 @@ engine = create_engine('sqlite:///catalog.db')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 dbSession = DBSession()
+
+
+# JSON endpoint to show all items
+@app.route('/catalog/JSON')
+def show_catalog_JSON():
+    items = dbSession.query(Item).order_by(Item.id.desc()).all()
+    return jsonify(Items=[i.serialize for i in items])
+
+
+# JSON endpoint to show an item
+@app.route('/item/<string:item_name>/JSON')
+def show_item_JSON(item_name):
+    try:
+        item = dbSession.query(Item).filter_by(name=item_name).one()
+        return jsonify(item.serialize)
+    except NoResultFound:
+        return jsonify({'error': 404, 'message': 'Item not found.'})
+
+
+# JSON endpoint to show all categories
+@app.route('/categories/JSON')
+def show_categories_JSON():
+    categories = dbSession.query(Category).order_by(Category.id.desc()).all()
+    return jsonify(Categories=[i.serialize for i in categories])
 
 
 # Home page
