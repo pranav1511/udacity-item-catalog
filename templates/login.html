@@ -65,14 +65,18 @@
             </div>
             <h2 class="my-5">Login</h2>
             <div id="signinButton">
-                <span class="g-signin" data-scope="openid email" data-clientid="{{ GOOGLE_CLIENT_ID }}" data-redirecturi="postmessage" data-accesstype="offline"
-                    data-cookiepolicy="single_host_origin" data-callback="googleSignInCallback" data-approvalprompt="force">
-                </span>
-
-                <fb:login-button scope="public_profile,email" onlogin="sendTokenToServer();">
-                    <a href='javascript:sendTokenToServer()'>Login with Facebook</a>
-                </fb:login-button>
-
+                <div class="d-block shadow mx-auto my-3 catalog-card card">
+                    <h6 class="my-3">Google Sign In</h6>
+                    <span class="g-signin" data-scope="openid email" data-clientid="{{ GOOGLE_CLIENT_ID }}" data-redirecturi="postmessage" data-accesstype="offline"
+                        data-cookiepolicy="single_host_origin" data-callback="googleSignInCallback" data-approvalprompt="force">
+                    </span>
+                </div>
+                <div class="d-block shadow mx-auto my-3 catalog-card card">
+                    <h6 class="my-3">Facebook Sign In</h6>
+                    <fb:login-button style="height: 36px;" scope="public_profile,email" onlogin="sendTokenToServer();">
+                        <a href='javascript:sendTokenToServer()'>Login with Facebook</a>
+                    </fb:login-button>
+                </div>
             </div>
             <div id="result" style="display: none;">
                 <h5>You will be redirected automatically or you can click <a href="{{ url_for('show_catalog') }}">here</a>.</h5>
