@@ -94,6 +94,8 @@ def edit_item(item_name):
         return redirect(url_for('show_login'))
     item_to_edit = dbSession.query(Item).filter_by(name=item_name).one()
     creator = get_user_info(item_to_edit.user_id)
+    category_name = dbSession.query(Category).filter_by(
+        id=item_to_edit.category_id).one().name
     if creator.id != login_session['user_id']:
         flash('You cannot edit this item!', 'warning')
         return redirect(url_for('show_catalog'))
@@ -114,7 +116,7 @@ def edit_item(item_name):
         return redirect(url_for('show_item', category_name=category_name, item_name=request.form['name']))
     else:
         categories = dbSession.query(Category).all()
-        return render_template('edit_item.html', categories=categories, item=item_to_edit, login_session=login_session)
+        return render_template('edit_item.html', categories=categories, category_name=category_name, item=item_to_edit, login_session=login_session)
 
 
 @app.route('/catalog/<string:item_name>/delete/', methods=['GET', 'POST'])
@@ -124,18 +126,18 @@ def delete_item(item_name):
         return redirect(url_for('show_login'))
     item_to_delete = dbSession.query(Item).filter_by(name=item_name).one()
     creator = get_user_info(item_to_delete.user_id)
+    category_name = dbSession.query(Category).filter_by(
+        id=item_to_delete.category_id).one().name
     if creator.id != login_session['user_id']:
         flash('You cannot delete this item!', 'warning')
         return redirect(url_for('show_catalog'))
     if request.method == 'POST':
         dbSession.delete(item_to_delete)
         dbSession.commit()
-        category_name = dbSession.query(Category).filter_by(
-            id=item_to_delete.category_id).one().name
         flash(item_to_delete.name + ' has been deleted successfully!', 'success')
         return redirect(url_for('show_items', category_name=category_name))
     else:
-        return render_template('delete_item.html', item=item_to_delete, login_session=login_session)
+        return render_template('delete_item.html', item=item_to_delete, category_name=category_name, login_session=login_session)
 
 
 @app.route('/login/')
