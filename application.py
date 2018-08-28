@@ -29,6 +29,7 @@ DBSession = sessionmaker(bind=engine)
 dbSession = DBSession()
 
 
+# Home page
 @app.route('/')
 @app.route('/catalog/')
 def show_catalog():
@@ -36,6 +37,7 @@ def show_catalog():
     return render_template('catalog.html', categories=categories, login_session=login_session)
 
 
+# Page to show all items in a category
 @app.route('/catalog/<string:category_name>/')
 @app.route('/catalog/<string:category_name>/items/')
 def show_items(category_name):
@@ -43,18 +45,22 @@ def show_items(category_name):
         name=category_name).one()
     items = dbSession.query(Item).filter_by(
         category_id=category.id).all()
+    # Check if user is logged in
     if 'user_id' not in login_session:
         return render_template('public_items.html', category=category, items=items, login_session=login_session)
     else:
         return render_template('items.html', category=category, items=items, login_session=login_session)
 
 
+# Page to add a new item in a category
 @app.route('/catalog/new/', methods=['GET', 'POST'])
 def new_item():
+    # Check if user is logged in
     if 'user_id' not in login_session:
         flash('You need to login first!', 'warning')
         return redirect(url_for('show_login'))
     if request.method == 'POST':
+        # Handle form data
         count = dbSession.query(Item).filter_by(
             name=request.form['name']).count()
         if count > 0:
@@ -77,18 +83,22 @@ def new_item():
         return render_template('new_item.html', categories=categories, login_session=login_session)
 
 
+# Page to show all items in a category
 @app.route('/catalog/<string:category_name>/<string:item_name>/')
 def show_item(category_name, item_name):
     item = dbSession.query(Item).filter_by(name=item_name).one()
     creator = get_user_info(item.user_id)
+    # Check if user is logged in
     if 'user_id' not in login_session or creator.id != login_session['user_id']:
         return render_template('public_item.html', category_name=category_name, item=item, login_session=login_session)
     else:
         return render_template('item.html', category_name=category_name, item=item, login_session=login_session)
 
 
+# Page to edit an item
 @app.route('/catalog/<string:item_name>/edit/', methods=['GET', 'POST'])
 def edit_item(item_name):
+    # Check if user is logged in
     if 'user_id' not in login_session:
         flash('You need to login first!', 'warning')
         return redirect(url_for('show_login'))
@@ -96,10 +106,12 @@ def edit_item(item_name):
     creator = get_user_info(item_to_edit.user_id)
     category_name = dbSession.query(Category).filter_by(
         id=item_to_edit.category_id).one().name
+    # Check if the logged in user is the creator of the item
     if creator.id != login_session['user_id']:
         flash('You cannot edit this item!', 'warning')
         return redirect(url_for('show_catalog'))
     if request.method == 'POST':
+        # Handle form data
         count = dbSession.query(Item).filter_by(
             name=request.form['name']).count()
         if count > 0 and item_name != request.form['name']:
@@ -119,8 +131,10 @@ def edit_item(item_name):
         return render_template('edit_item.html', categories=categories, category_name=category_name, item=item_to_edit, login_session=login_session)
 
 
+# Page to delete an item
 @app.route('/catalog/<string:item_name>/delete/', methods=['GET', 'POST'])
 def delete_item(item_name):
+    # Check if user is logged in
     if 'user_id' not in login_session:
         flash('You need to login first!', 'warning')
         return redirect(url_for('show_login'))
@@ -128,6 +142,7 @@ def delete_item(item_name):
     creator = get_user_info(item_to_delete.user_id)
     category_name = dbSession.query(Category).filter_by(
         id=item_to_delete.category_id).one().name
+    # Check if the logged in user is the creator of the item
     if creator.id != login_session['user_id']:
         flash('You cannot delete this item!', 'warning')
         return redirect(url_for('show_catalog'))
@@ -140,14 +155,17 @@ def delete_item(item_name):
         return render_template('delete_item.html', item=item_to_delete, category_name=category_name, login_session=login_session)
 
 
+# Login page
 @app.route('/login/')
 def show_login():
+    # Create anti forgery state token
     state = '' . join(random.choice(string.ascii_uppercase +
                                     string.digits) for x in xrange(32))
     login_session['state'] = state
     return render_template('login.html', state=state, GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID, FACEBOOK_APP_ID=FACEBOOK_APP_ID, login_session=login_session)
 
 
+# Google login callback function
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     # Validate state token
@@ -217,17 +235,19 @@ def gconnect():
 
     data = answer.json()
 
+    # Store user details in the session
     login_session['provider'] = 'google'
     login_session['username'] = data['name']
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
-    # see if user exists
+    # Check if user already exists
     user_id = get_user_id(login_session['email'])
     if not user_id:
         user_id = create_user(login_session)
     login_session['user_id'] = user_id
 
+    # Create response json
     response_json = {}
     response_json['username'] = login_session['username']
     response_json['picture'] = login_session['picture']
@@ -239,9 +259,11 @@ def gconnect():
     return response
 
 
+# Disconnect google
 @app.route('/gdisconnect')
 def gdisconnect():
     access_token = login_session.get('access_token')
+    # Check if user is logged in
     if access_token is None:
         print('Access Token is None')
         response = make_response(json.dumps(
@@ -251,11 +273,13 @@ def gdisconnect():
     print('In gdisconnect access token is %s' % access_token)
     print('User name is: ')
     print(login_session['username'])
+    # Revoke token
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
     print('result is ')
     print(result)
+    # Create response
     if result['status'] == '200':
         response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
@@ -267,12 +291,15 @@ def gdisconnect():
         return response
 
 
+# Facebook login callback function
 @app.route('/fbconnect', methods=['POST'])
 def fbconnect():
+    # Validate state token
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
+    # Obtain access token
     access_token = request.data
     print("access token received %s " % access_token)
 
@@ -295,6 +322,7 @@ def fbconnect():
     '''
     token = result.split(',')[0].split(':')[1].replace('"', '')
 
+    # Get user info
     url = 'https://graph.facebook.com/v3.1/me?access_token=%s&fields=name,id,email' % token
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
@@ -316,12 +344,13 @@ def fbconnect():
 
     login_session['picture'] = data["data"]["url"]
 
-    # see if user exists
+    # Check if user already exists
     user_id = get_user_id(login_session['email'])
     if not user_id:
         user_id = create_user(login_session)
     login_session['user_id'] = user_id
 
+    # Create response json
     response_json = {}
     response_json['username'] = login_session['username']
     response_json['picture'] = login_session['picture']
@@ -333,6 +362,7 @@ def fbconnect():
     return response
 
 
+# Disconnect facebook
 @app.route('/fbdisconnect')
 def fbdisconnect():
     facebook_id = login_session['facebook_id']
@@ -345,8 +375,10 @@ def fbdisconnect():
     return "you have been logged out"
 
 
+# Logout
 @app.route('/disconnect')
 def disconnect():
+    # Check login provider
     if 'provider' in login_session:
         if login_session['provider'] == 'google':
             gdisconnect()
@@ -354,6 +386,7 @@ def disconnect():
         if login_session['provider'] == 'facebook':
             fbdisconnect()
             del login_session['facebook_id']
+        # Delete all the info stored in session to successfully logout
         del login_session['access_token']
         del login_session['username']
         del login_session['email']
@@ -367,6 +400,7 @@ def disconnect():
         return redirect(url_for('show_catalog'))
 
 
+# Create a new user in the database
 def create_user(login_session):
     new_user = User(name=login_session['username'], email=login_session[
         'email'], picture=login_session['picture'])
@@ -376,11 +410,13 @@ def create_user(login_session):
     return user.id
 
 
+# Retrieve user info by using user_id
 def get_user_info(user_id):
     user = dbSession.query(User).filter_by(id=user_id).one()
     return user
 
 
+# Retrieve user_id by using email
 def get_user_id(email):
     try:
         user = dbSession.query(User).filter_by(email=email).one()
