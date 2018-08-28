@@ -24,23 +24,20 @@
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="#">Item Catalog</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent" aria-controls="navbarContent"
-                aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
+            <a class="navbar-brand" href="{{ url_for('show_catalog') }}">Item Catalog</a>
             <div class="collapse navbar-collapse" id="navbarContent">
                 <ul class="navbar-nav ml-auto">
-                    <li class="nav-item active">
-                        <a class="nav-link" href="#">Home
-                            <span class="sr-only">(current)</span>
-                        </a>
-                    </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Link</a>
+                        <a href="{{ url_for('show_catalog') }}" class="nav-link">All Categories</a>
+                    </li>
+                    <li class="nav-item ml-2">
+                        {% if 'user_id' not in login_session %}
+                        <a href="{{ url_for('show_login') }}" class="btn btn-primary">Login</a>
+                        {{login_session['user_id']}} {% else %}
+                        <a href="{{ url_for('disconnect') }}" class="btn btn-primary">Logout</a>
+                        {% endif %}
                     </li>
                 </ul>
             </div>

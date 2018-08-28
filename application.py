@@ -33,7 +33,7 @@ dbSession = DBSession()
 @app.route('/catalog/')
 def show_catalog():
     categories = dbSession.query(Category).all()
-    return render_template('catalog.html', categories=categories)
+    return render_template('catalog.html', categories=categories, login_session=login_session)
 
 
 @app.route('/catalog/<string:category_name>/')
@@ -44,9 +44,9 @@ def show_items(category_name):
     items = dbSession.query(Item).filter_by(
         category_id=category.id).all()
     if 'user_id' not in login_session:
-        return render_template('public_items.html', category=category, items=items)
+        return render_template('public_items.html', category=category, items=items, login_session=login_session)
     else:
-        return render_template('items.html', category=category, items=items)
+        return render_template('items.html', category=category, items=items, login_session=login_session)
 
 
 @app.route('/catalog/new/', methods=['GET', 'POST'])
@@ -74,7 +74,7 @@ def new_item():
         return redirect(url_for('show_item', category_name=category_name, item_name=request.form['name']))
     else:
         categories = dbSession.query(Category).all()
-        return render_template('new_item.html', categories=categories)
+        return render_template('new_item.html', categories=categories, login_session=login_session)
 
 
 @app.route('/catalog/<string:category_name>/<string:item_name>/')
@@ -82,9 +82,9 @@ def show_item(category_name, item_name):
     item = dbSession.query(Item).filter_by(name=item_name).one()
     creator = get_user_info(item.user_id)
     if 'user_id' not in login_session or creator.id != login_session['user_id']:
-        return render_template('public_item.html', category_name=category_name, item=item)
+        return render_template('public_item.html', category_name=category_name, item=item, login_session=login_session)
     else:
-        return render_template('item.html', category_name=category_name, item=item)
+        return render_template('item.html', category_name=category_name, item=item, login_session=login_session)
 
 
 @app.route('/catalog/<string:item_name>/edit/', methods=['GET', 'POST'])
@@ -114,7 +114,7 @@ def edit_item(item_name):
         return redirect(url_for('show_item', category_name=category_name, item_name=request.form['name']))
     else:
         categories = dbSession.query(Category).all()
-        return render_template('edit_item.html', categories=categories, item=item_to_edit)
+        return render_template('edit_item.html', categories=categories, item=item_to_edit, login_session=login_session)
 
 
 @app.route('/catalog/<string:item_name>/delete/', methods=['GET', 'POST'])
@@ -135,7 +135,7 @@ def delete_item(item_name):
         flash(item_to_delete.name + ' has been deleted successfully!', 'success')
         return redirect(url_for('show_items', category_name=category_name))
     else:
-        return render_template('delete_item.html', item=item_to_delete)
+        return render_template('delete_item.html', item=item_to_delete, login_session=login_session)
 
 
 @app.route('/login/')
@@ -143,7 +143,7 @@ def show_login():
     state = '' . join(random.choice(string.ascii_uppercase +
                                     string.digits) for x in xrange(32))
     login_session['state'] = state
-    return render_template('login.html', state=state, GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID, FACEBOOK_APP_ID=FACEBOOK_APP_ID)
+    return render_template('login.html', state=state, GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID, FACEBOOK_APP_ID=FACEBOOK_APP_ID, login_session=login_session)
 
 
 @app.route('/gconnect', methods=['POST'])
