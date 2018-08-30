@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template
+from flask import request, redirect, url_for, flash, jsonify
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -59,7 +60,8 @@ def show_categories_JSON():
 @app.route('/catalog/')
 def show_catalog():
     categories = dbSession.query(Category).all()
-    return render_template('catalog.html', categories=categories, login_session=login_session)
+    return render_template(
+        'catalog.html', categories=categories, login_session=login_session)
 
 
 # Page to show all items in a category
@@ -72,9 +74,13 @@ def show_items(category_name):
         category_id=category.id).all()
     # Check if user is logged in
     if 'user_id' not in login_session:
-        return render_template('public_items.html', category=category, items=items, login_session=login_session)
+        return render_template(
+            'public_items.html', category=category, items=items,
+            login_session=login_session)
     else:
-        return render_template('items.html', category=category, items=items, login_session=login_session)
+        return render_template(
+            'items.html', category=category, items=items,
+            login_session=login_session)
 
 
 # Page to add a new item in a category
@@ -102,10 +108,15 @@ def new_item():
             id=request.form['category_id']).one().name
         flash(new_item.name + ' has been added to the category ' +
               category_name + ' successfully!', 'success')
-        return redirect(url_for('show_item', category_name=category_name, item_name=request.form['name']))
+        return redirect(
+            url_for(
+                'show_item', category_name=category_name,
+                item_name=request.form['name']))
     else:
         categories = dbSession.query(Category).all()
-        return render_template('new_item.html', categories=categories, login_session=login_session)
+        return render_template(
+            'new_item.html', categories=categories,
+            login_session=login_session)
 
 
 # Page to show all items in a category
@@ -114,10 +125,15 @@ def show_item(category_name, item_name):
     item = dbSession.query(Item).filter_by(name=item_name).one()
     creator = get_user_info(item.user_id)
     # Check if user is logged in
-    if 'user_id' not in login_session or creator.id != login_session['user_id']:
-        return render_template('public_item.html', category_name=category_name, item=item, login_session=login_session)
+    if ('user_id' not in login_session or
+            creator.id != login_session['user_id']):
+        return render_template(
+            'public_item.html', category_name=category_name, item=item,
+            login_session=login_session)
     else:
-        return render_template('item.html', category_name=category_name, item=item, login_session=login_session)
+        return render_template(
+            'item.html', category_name=category_name, item=item,
+            login_session=login_session)
 
 
 # Page to edit an item
@@ -150,10 +166,16 @@ def edit_item(item_name):
         category_name = dbSession.query(Category).filter_by(
             id=request.form['category_id']).one().name
         flash(item_to_edit.name + ' has been updated successfully!', 'success')
-        return redirect(url_for('show_item', category_name=category_name, item_name=request.form['name']))
+        return redirect(
+            url_for(
+                'show_item', category_name=category_name,
+                item_name=request.form['name']))
     else:
         categories = dbSession.query(Category).all()
-        return render_template('edit_item.html', categories=categories, category_name=category_name, item=item_to_edit, login_session=login_session)
+        return render_template(
+            'edit_item.html', categories=categories,
+            category_name=category_name, item=item_to_edit,
+            login_session=login_session)
 
 
 # Page to delete an item
@@ -174,10 +196,13 @@ def delete_item(item_name):
     if request.method == 'POST':
         dbSession.delete(item_to_delete)
         dbSession.commit()
-        flash(item_to_delete.name + ' has been deleted successfully!', 'success')
+        flash(item_to_delete.name +
+              ' has been deleted successfully!', 'success')
         return redirect(url_for('show_items', category_name=category_name))
     else:
-        return render_template('delete_item.html', item=item_to_delete, category_name=category_name, login_session=login_session)
+        return render_template(
+            'delete_item.html', item=item_to_delete,
+            category_name=category_name, login_session=login_session)
 
 
 # Login page
@@ -187,7 +212,10 @@ def show_login():
     state = '' . join(random.choice(string.ascii_uppercase +
                                     string.digits) for x in xrange(32))
     login_session['state'] = state
-    return render_template('login.html', state=state, GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID, FACEBOOK_APP_ID=FACEBOOK_APP_ID, login_session=login_session)
+    return render_template('login.html', state=state,
+                           GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID,
+                           FACEBOOK_APP_ID=FACEBOOK_APP_ID,
+                           login_session=login_session)
 
 
 # Google login callback function
@@ -244,8 +272,8 @@ def gconnect():
     stored_access_token = login_session.get('access_token')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_access_token is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
+        response = make_response(json.dumps(
+            'Current user is already connected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -299,14 +327,16 @@ def gdisconnect():
     print('User name is: ')
     print(login_session['username'])
     # Revoke token
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    url = ('https://accounts.google.com/o/oauth2/revoke?token=%s' %
+           login_session['access_token'])
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
     print('result is ')
     print(result)
     # Create response
     if result['status'] == '200':
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
+        response = make_response(json.dumps(
+            'Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
     else:
@@ -331,7 +361,11 @@ def fbconnect():
     app_id = FACEBOOK_APP_ID
     app_secret = json.loads(
         open('facebook_client_secrets.json', 'r').read())['web']['app_secret']
-    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (
+    url = ('https://graph.facebook.com/oauth/access_token'
+           '?grant_type=fb_exchange_token'
+           '&client_id=%s'
+           '&client_secret=%s'
+           '&fb_exchange_token=%s') % (
         app_id, app_secret, access_token)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
@@ -339,16 +373,19 @@ def fbconnect():
     # Use token to get user info from API
     userinfo_url = "https://graph.facebook.com/v3.1/me"
     '''
-        Due to the formatting for the result from the server token exchange we have to
-        split the token first on commas and select the first index which gives us the key : value
-        for the server access token then we split it on colons to pull out the actual token value
-        and replace the remaining quotes with nothing so that it can be used directly in the graph
-        api calls
+        Due to the formatting for the result from the server token exchange we
+        have to split the token first on commas and select the first index
+        which gives us the key : value for the server access token then we
+        split it on colons to pull out the actual token value and replace the
+        remaining quotes with nothing so that it can be used directly in the
+        graph api calls
     '''
     token = result.split(',')[0].split(':')[1].replace('"', '')
 
     # Get user info
-    url = 'https://graph.facebook.com/v3.1/me?access_token=%s&fields=name,id,email' % token
+    url = ('https://graph.facebook.com/v3.1/me'
+           '?access_token=%s'
+           '&fields=name,id,email') % token
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
 
@@ -362,7 +399,11 @@ def fbconnect():
     login_session['access_token'] = token
 
     # Get user picture
-    url = 'https://graph.facebook.com/v3.1/me/picture?access_token=%s&redirect=0&height=200&width=200' % token
+    url = ('https://graph.facebook.com/v3.1/me/picture'
+           '?access_token=%s'
+           '&redirect=0'
+           '&height=200'
+           '&width=200') % token
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
@@ -446,7 +487,7 @@ def get_user_id(email):
     try:
         user = dbSession.query(User).filter_by(email=email).one()
         return user.id
-    except:
+    except NoResultFound:
         return None
 
 
