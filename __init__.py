@@ -20,12 +20,12 @@ import requests
 app = Flask(__name__)
 
 GOOGLE_CLIENT_ID = json.loads(
-    open('google_client_secrets.json', 'r').read())['web']['client_id']
+    open('/var/www/itemcatalog/catalog/google_client_secrets.json', 'r').read())['web']['client_id']
 
 FACEBOOK_APP_ID = json.loads(
-    open('facebook_client_secrets.json', 'r').read())['web']['app_id']
+    open('/var/www/itemcatalog/catalog/facebook_client_secrets.json', 'r').read())['web']['app_id']
 
-engine = create_engine('sqlite:///catalog.db')
+engine = create_engine('postgresql://catalog:udacity@localhost/catalog')
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 dbSession = DBSession()
@@ -232,7 +232,7 @@ def gconnect():
     try:
         # Upgrade the authorization code into a credentials object
         oauth_flow = flow_from_clientsecrets(
-            'google_client_secrets.json', scope='')
+            '/var/www/itemcatalog/catalog/google_client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
@@ -360,7 +360,7 @@ def fbconnect():
 
     app_id = FACEBOOK_APP_ID
     app_secret = json.loads(
-        open('facebook_client_secrets.json', 'r').read())['web']['app_secret']
+        open('/var/www/itemcatalog/catalog/facebook_client_secrets.json', 'r').read())['web']['app_secret']
     url = ('https://graph.facebook.com/oauth/access_token'
            '?grant_type=fb_exchange_token'
            '&client_id=%s'
@@ -492,6 +492,4 @@ def get_user_id(email):
 
 
 if __name__ == '__main__':
-    app.secret_key = 'perfect_secret_key'
-    app.debug = True
-    app.run(host='0.0.0.0', port=8080, threaded=False)
+    app.run()
